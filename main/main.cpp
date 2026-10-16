@@ -91,15 +91,15 @@ void getUserInput(double& heightInches, double& weightPounds, string& choice, do
 }
 
 void calculateCalories(double weight, double distance) {
-    const double CalorieBurnRate = 0.0175;
+    const double CalorieBurnRate = 0.76;
     // Assuming distance is in kilometers and weight is in kilograms
     double caloriesBurned = CalorieBurnRate * weight * distance;
-    std::cout << "Calories burned: " << caloriesBurned << std::endl;
+    std::cout << "Calories burned: " << caloriesBurned << endl;
 }
 
 void calculateDistance(double weight, double calories) {
-    const double CalorieBurnRate = 0.0175;
+    const double CalorieBurnRate = 0.76;
     // Assuming weight is in kilograms and calories is the total calories burned
     double distance = calories / (CalorieBurnRate * weight);
-    std::cout << "Distance needed: " << distance << " miles" << std::endl;
+    std::cout << "Distance needed: " << distance << " miles" << endl;
 }
