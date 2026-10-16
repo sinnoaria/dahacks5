@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <string>
 using namespace std; //include all std for simplicity
@@ -190,14 +189,14 @@ void getUserInput(double& heightInches, double& weightPounds, int& choice, doubl
 
 void calculateCalories(double weight, double distance) {
     const double CalorieBurnRate = 0.76;
-    // Assuming distance is in kilometers and weight is in kilograms
+    // Assuming distance is in miles and weight is in pounds
     double caloriesBurned = CalorieBurnRate * weight * distance;
     std::cout << "Calories burned: " << caloriesBurned << endl;
 }
 
 void calculateDistance(double weight, double calories) {
     const double CalorieBurnRate = 0.76;
-    // Assuming weight is in kilograms and calories is the total calories burned
+    // Assuming weight is in pounds and calories is the total calories burned
     double distance = calories / (CalorieBurnRate * weight);
     std::cout << "Distance needed: " << distance << " miles" << endl;
 }
