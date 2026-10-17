@@ -54,3 +54,19 @@ Calories Burned: 1695.56
 Timestamp: Sat Oct 17 11:03:36 2026
 
 
+Height: 100 inches
+Weight: 29 pounds
+BMI: 2.0387
+Distance: 291 miles
+Calories Burned: 6413.64
+Timestamp: Sat Oct 17 11:06:09 2026
+
+
+Height: 1231.00 inches
+Weight: 423.00 pounds
+BMI: 0.20
+Distance: 12312.00 miles
+Calories Burned: 3958061.76
+Timestamp: Sat Oct 17 11:37:59 2026
+
+

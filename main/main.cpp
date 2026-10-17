@@ -7,6 +7,7 @@
 #include "modules/FitnessResults.h"
 #include "modules/fitnessUserInput.h"
 #include "modules/fitnessCalculations.h"
+#include "modules/fitnessGui.cpp"
 
 using namespace std; //include all std for simplicity
 
@@ -26,6 +27,9 @@ int main() {
     vector<FitnessResults> results;
     bool continueInput = true;
 
+    runFitnessGui(results);
+
+    return 0;
     do {
 
         getUserInput(heightInches, weightPounds, choice, distance, calories);
