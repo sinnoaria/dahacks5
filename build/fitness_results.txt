@@ -1,0 +1,80 @@
+Height: 2 inches
+Weight: 1 pounds
+BMI: 175.75
+Distance: 20 miles
+Calories Burned: 15.2
+Timestamp: Sat Oct 17 10:32:56 2026
+
+
+Height: 80 inches
+Weight: 20 pounds
+BMI: 2.19687
+Distance: 1.97368 miles
+Calories Burned: 30
+Timestamp: Sat Oct 17 10:33:11 2026
+
+
+Height: 103 inches
+Weight: 59 pounds
+BMI: 3.90961
+Distance: 29 miles
+Calories Burned: 1300.36
+Timestamp: Sat Oct 17 10:33:31 2026
+
+
+Height: 90 inches
+Weight: 59 pounds
+BMI: 5.12062
+Distance: 2 miles
+Calories Burned: 89.68
+Timestamp: Sat Oct 17 10:37:15 2026
+
+
+Height: 200 inches
+Weight: 203 pounds
+BMI: 3.56772
+Distance: 29 miles
+Calories Burned: 4474.12
+Timestamp: Sat Oct 17 10:37:50 2026
+
+
+Height: 90 inches
+Weight: 1 pounds
+BMI: 0.0867901
+Distance: 29 miles
+Calories Burned: 22.04
+Timestamp: Sat Oct 17 10:39:15 2026
+
+
+Height: 120 inches
+Weight: 97 pounds
+BMI: 4.73549
+Distance: 23 miles
+Calories Burned: 1695.56
+Timestamp: Sat Oct 17 11:03:36 2026
+
+
+Height: 100 inches
+Weight: 29 pounds
+BMI: 2.0387
+Distance: 291 miles
+Calories Burned: 6413.64
+Timestamp: Sat Oct 17 11:06:09 2026
+
+
+Height: 1231.00 inches
+Weight: 423.00 pounds
+BMI: 0.20
+Distance: 12312.00 miles
+Calories Burned: 3958061.76
+Timestamp: Sat Oct 17 11:37:59 2026
+
+
+Height: 62.00 inches
+Weight: 123.00 pounds
+BMI: 22.49
+Distance: 23.00 miles
+Calories Burned: 2150.04
+Timestamp: Sat Oct 17 12:26:03 2026
+
+
