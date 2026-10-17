@@ -1,6 +1,9 @@
 # Prerequisites
 *.d
 
+# Build directories
+build/
+
 # Compiled Object files
 *.slo
 *.lo
@@ -30,3 +33,11 @@
 *.exe
 *.out
 *.app
+*.ilk
+*.pdb
+*.pdb
+main/main_win32.cpp
+*.ilk
+*.pdb
+*.pdb
+/.vscode
