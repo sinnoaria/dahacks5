@@ -6,6 +6,7 @@
 #include "modules/FitnessResults.h"
 #include "modules/fitnessUserInput.h"
 #include "modules/fitnessCalculations.h"
+#include "modules/fitnessGui.h"
 
 using namespace std; //include all std for simplicity
 
