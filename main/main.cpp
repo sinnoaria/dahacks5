@@ -3,7 +3,6 @@
 #include <string>
 #include <time.h>
 #include <vector>
-#include <limits>
 #include "modules/FitnessResults.h"
 #include "modules/fitnessUserInput.h"
 #include "modules/fitnessCalculations.h"
@@ -28,7 +27,7 @@ int main() {
     bool continueInput = true;
 
     runFitnessGui(results);
-
+    /* *
     return 0;
     do {
 
@@ -76,9 +75,10 @@ int main() {
             continueInput = false;
         }
     } while (continueInput);
-
+    /* */
 
     return 0;
+  
 
 }
 
