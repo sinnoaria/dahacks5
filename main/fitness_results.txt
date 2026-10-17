@@ -70,3 +70,11 @@ Calories Burned: 3958061.76
 Timestamp: Sat Oct 17 11:37:59 2026
 
 
+Height: 62.00 inches
+Weight: 123.00 pounds
+BMI: 22.49
+Distance: 23.00 miles
+Calories Burned: 2150.04
+Timestamp: Sat Oct 17 12:26:03 2026
+
+

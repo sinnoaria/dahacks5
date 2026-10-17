@@ -3,11 +3,10 @@
 #include <string>
 #include <time.h>
 #include <vector>
-#include <limits>
 #include "modules/FitnessResults.h"
 #include "modules/fitnessUserInput.h"
 #include "modules/fitnessCalculations.h"
-#include "modules/fitnessGui.cpp"
+#include "modules/fitnessGui.h"
 
 using namespace std; //include all std for simplicity
 
@@ -29,6 +28,7 @@ int main() {
 
     runFitnessGui(results);
 
+    /* *
     return 0;
     do {
 
@@ -76,9 +76,8 @@ int main() {
             continueInput = false;
         }
     } while (continueInput);
-
+    /* */
 
     return 0;
 
 }
-
