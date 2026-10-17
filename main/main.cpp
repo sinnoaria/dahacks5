@@ -3,9 +3,9 @@
 #include <string>
 #include <time.h>
 #include <vector>
+#include "modules/FitnessResults.h"
+#include "modules/cinErrorHandling.h"
 using namespace std; //include all std for simplicity
-
-class FitnessResults; // Forward declaration of the FitnessResults class
 
 void getUserInput(
     double& heightInches,
@@ -29,114 +29,6 @@ int getMovementType();
 void clearCin(double& value, double defaultFail);
 void clearCin(int& value, int defaultFail);
 void clearCin();
-
-class FitnessResults {
-    private:
-        double heightInches;
-        double weightPounds;
-        double bmi;
-        double distanceMiles;
-        double caloriesBurned;
-        int pathType;
-        int movementType;
-        int age;
-        string timestamp;
-    
-    public:
-    
-        double getHeightInches() {
-            return heightInches;
-        }
-
-        double getWeightPounds() {
-            return weightPounds;
-        }
-
-        double getBMI() {
-            return bmi;
-        }
-
-        double getDistanceMiles() {
-            return distanceMiles;
-        }
-
-        double getCaloriesBurned() {
-            return caloriesBurned;
-        }
-
-        string getTimestamp() {
-            return timestamp;
-        }
-
-        string getPathType() {
-            return pathType == 1 ? "Concrete" : (pathType == 2 ? 
-                "Dirt" : "Unknown");
-        }
-
-        string getMovementType() {
-            return movementType == 1 ? "Walking" : (movementType == 2 ? 
-                "Running" : "Unknown");
-        }
-
-        int getAge() {
-            return age;
-        }
-
-        void setHeightInches(double height) {
-            heightInches = height;
-        }
-
-        void setWeightPounds(double weight) {
-            weightPounds = weight;
-        }
-
-        void setDistanceMiles(double distance) {
-            distanceMiles = distance;
-        }
-
-        void setCaloriesBurned(double calories) {
-            caloriesBurned = calories;
-        }
-
-        void setPathType(int type) {
-            pathType = type;
-        }
-
-        void setMovementType(int type) {
-            movementType = type;
-        }
-
-        void setAge(int userAge) {
-            age = userAge;
-        }
-
-        void setTimestamp(time_t time) {
-            timestamp = ctime(&time);
-        }
-
-        double calculateBMI() {
-            return (weightPounds / (heightInches * heightInches)) * 703.0;
-        }
-
-        void calculateCaloriesBurned() {
-            const double CalorieBurnRate = 0.76;
-            caloriesBurned = CalorieBurnRate * weightPounds * distanceMiles;
-        }
-
-        void calculateDistanceForCalories() {
-            const double CalorieBurnRate = 0.76;
-            distanceMiles = caloriesBurned / (CalorieBurnRate * weightPounds);
-        }
-
-        void displayResults() const {
-            cout << "Height: " << heightInches << " inches" << endl;
-            cout << "Weight: " << weightPounds << " pounds" << endl;
-            cout << "BMI: " << bmi << endl;
-            cout << "Distance: " << distanceMiles << " miles" << endl;
-            cout << "Calories Burned: " << caloriesBurned << endl;
-            cout << "Timestamp: " << timestamp << endl;
-        }
-};
 
 int main() {
     /*
@@ -169,7 +61,7 @@ int main() {
         results.back().setHeightInches(heightInches);
         results.back().setWeightPounds(weightPounds);
         results.back().setTimestamp(time(nullptr));
-        results.back().calculateBMI();
+        results.back().setCalculatedBMI();
         results.back().setDistanceMiles(distance);
         results.back().setCaloriesBurned(calories);
         results.back().displayResults();
@@ -223,22 +115,7 @@ void getUserInput(vector<FitnessResults>& results, int& choice) {
     results.push_back(result);
 }
 
-void clearCin(double& value, double defaultFail) {
-    if (cin.fail()) value = defaultFail; // Reset the value to a default fail value
-    cin.clear(); // Clear any error flags
-    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear the input buffera
-}
 
-void clearCin(int& value, int defaultFail) {
-    if (cin.fail()) value = defaultFail; // Reset the value to a default fail value
-    cin.clear(); // Clear any error flags
-    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear the input buffer
-}
-
-void clearCin() {
-    cin.clear(); // Clear any error flags
-    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear the input buffer
-}
 
 double getUserHeight() {
     double heightInches;

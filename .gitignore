@@ -40,3 +40,4 @@ main/main_win32.cpp
 *.ilk
 *.pdb
 *.pdb
+/.vscode
