@@ -17,4 +17,9 @@ constexpr int labelX = 20;
 constexpr int labelWidth = 150;
 constexpr int inputHeight = 25;
 constexpr int rowSpacing = 40;
+constexpr int resultsTableX = 20;
+constexpr int resultsTableY = 380;
+constexpr int resultsTableWidth = 540;
+constexpr int resultsTableHeight = 220;
+constexpr int windowHeightWithTable = 650;
 }

@@ -12,7 +12,8 @@
                 "${file}",
                 "/link",
                 "/SUBSYSTEM:CONSOLE",
-                "user32.lib"
+                "user32.lib",
+                "comctl32.lib"
             ],
             "options": {
                 "cwd": "${fileDirname}"
