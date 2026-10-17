@@ -3,6 +3,7 @@
 #include <string>
 #include <time.h>
 #include <vector>
+#include <limits>
 #include "modules/FitnessResults.h"
 #include "modules/cinErrorHandling.h"
 using namespace std; //include all std for simplicity
