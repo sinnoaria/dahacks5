@@ -1,5 +1,7 @@
 #include <iostream>
 #include <string>
+#include <time.h>
+#include <vector>
 using namespace std; //include all std for simplicity
 
 void getUserInput(
@@ -24,6 +26,83 @@ void clearCin(double& value, double defaultFail);
 void clearCin(int& value, int defaultFail);
 void clearCin();
 
+class FitnessResults {
+    private:
+        double heightInches;
+        double weightPounds;
+        double bmi;
+        double distanceMiles;
+        double caloriesBurned;
+        time_t timestamp;
+    
+    public:
+        double getHeightInches() {
+            return heightInches;
+        }
+
+        double getWeightPounds() {
+            return weightPounds;
+        }
+
+        double getBMI() {
+            return bmi;
+        }
+
+        double getDistanceMiles() {
+            return distanceMiles;
+        }
+
+        double getCaloriesBurned() {
+            return caloriesBurned;
+        }
+
+        double getTimestamp() {
+            return timestamp;
+        }
+
+        void setHeightInches(double height) {
+            heightInches = height;
+        }
+
+        void setWeightPounds(double weight) {
+            weightPounds = weight;
+        }
+
+        void setDistanceMiles(double distance) {
+            distanceMiles = distance;
+        }
+
+        void setCaloriesBurned(double calories) {
+            caloriesBurned = calories;
+        }
+
+        void setTimestamp(time_t time) {
+            timestamp = time;
+        }
+
+        double calculateBMI() {
+            return (weightPounds / (heightInches * heightInches)) * 703.0;
+        }
+
+        void calculateCaloriesBurned() {
+            const double CalorieBurnRate = 0.76;
+            caloriesBurned = CalorieBurnRate * weightPounds * distanceMiles;
+        }
+
+        void calculateDistanceForCalories() {
+            const double CalorieBurnRate = 0.76;
+            distanceMiles = caloriesBurned / (CalorieBurnRate * weightPounds);
+        }
+
+        void displayResults() const {
+            cout << "Height: " << heightInches << " inches" << endl;
+            cout << "Weight: " << weightPounds << " pounds" << endl;
+            cout << "BMI: " << bmi << endl;
+            cout << "Distance: " << distanceMiles << " miles" << endl;
+            cout << "Calories Burned: " << caloriesBurned << endl;
+            cout << "Timestamp: " << ctime(&timestamp);
+        }
+};
 
 int main() {
     /*
@@ -36,6 +115,7 @@ int main() {
     int choice = 0;
     double distance = 0.0;
     double calories = 0.0;
+    vector<FitnessResults> results;
 
     getUserInput(heightInches, weightPounds, choice, distance, calories);
     if (choice == 1) {
