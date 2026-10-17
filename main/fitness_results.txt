@@ -1,0 +1,30 @@
+Height: 90 inches
+Weight: 10 pounds
+BMI: 0
+Distance: 20 miles
+Calories Burned: 0
+Timestamp: Sat Oct 17 09:53:07 2026
+
+
+Height: 90 inches
+Weight: 20 pounds
+BMI: 0
+Distance: 20 miles
+Calories Burned: 304
+Timestamp: Sat Oct 17 09:58:20 2026
+
+
+Height: 92 inches
+Weight: 13 pounds
+BMI: 0
+Distance: 104.15 miles
+Calories Burned: 1029
+Timestamp: Sat Oct 17 09:58:34 2026
+
+
+Height: 102 inches
+Weight: 32 pounds
+BMI: 0
+Distance: 29 miles
+Calories Burned: 705.28
+Timestamp: Sat Oct 17 09:58:46 2026
