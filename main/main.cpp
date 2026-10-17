@@ -1,6 +1,10 @@
-
 #include <iostream>
+#include <fstream>
 #include <string>
+#include <time.h>
+#include <vector>
+#include "modules/FitnessResults.h"
+#include "modules/cinErrorHandling.h"
 using namespace std; //include all std for simplicity
 
 void getUserInput(
@@ -10,9 +14,10 @@ void getUserInput(
     double& distance,
     double& calories
 );
+void getUserInput(vector<FitnessResults>& results, int& choice);
 
-void calculateCalories(double weight, double distance);
-void calculateDistance(double weight, double calories);
+double calculateCalories(double weight, double distance);
+double calculateDistance(double weight, double calories);
 void showBMI(double heightInches, double weightPounds);
 double getUserHeight();
 double getUserWeight();
@@ -25,7 +30,6 @@ void clearCin(double& value, double defaultFail);
 void clearCin(int& value, int defaultFail);
 void clearCin();
 
-
 int main() {
     /*
     pathType (tbd) - assume concrete for now
@@ -37,39 +41,81 @@ int main() {
     int choice = 0;
     double distance = 0.0;
     double calories = 0.0;
+    vector<FitnessResults> results;
+    bool continueInput = true;
 
-    getUserInput(heightInches, weightPounds, choice, distance, calories);
-    if (choice == 1) {
-        // Calculate calories burned based on weight and distance
-        calculateCalories(weightPounds, distance); // Example distance of 5 mi
-    } else if (choice == 2) {
-        // Calculate distance based on weight and calories burned
-        calculateDistance(weightPounds, calories); // Example calories burned of 100
-    } else {
-        cout << "Something went wrong" << endl;
-    }
-    showBMI(heightInches, weightPounds);
+    do {
+
+        getUserInput(heightInches, weightPounds, choice, distance, calories);
+        if (choice == 1) {
+            // Calculate calories burned based on weight and distance
+            calories =calculateCalories(weightPounds, distance); // Example distance of 5 mi
+        } else if (choice == 2) {
+            // Calculate distance based on weight and calories burned
+            distance = calculateDistance(weightPounds, calories); // Example calories burned of 100
+        } else {
+            cout << "Something went wrong" << endl;
+        }
+        showBMI(heightInches, weightPounds);
+        results.emplace_back();
+        results.back().setHeightInches(heightInches);
+        results.back().setWeightPounds(weightPounds);
+        results.back().setTimestamp(time(nullptr));
+        results.back().setCalculatedBMI();
+        results.back().setDistanceMiles(distance);
+        results.back().setCaloriesBurned(calories);
+        results.back().displayResults();
+
+        ofstream outFile("fitness_results.txt", ios::app); // Open the file in append mode
+        if (outFile.is_open()) {
+            {
+                outFile << "Height: " << results.back().getHeightInches() << " inches" << endl;
+                outFile << "Weight: " << results.back().getWeightPounds() << " pounds" << endl;
+                outFile << "BMI: " << results.back().getBMI() << endl;
+                outFile << "Distance: " << results.back().getDistanceMiles() << " miles" << endl;
+                outFile << "Calories Burned: " << results.back().getCaloriesBurned() << endl;
+                outFile << "Timestamp: " << results.back().getTimestamp() << endl;
+                outFile << endl; // Add a blank line between entries
+            }
+            outFile.close();
+            cout << "Results saved to fitness_results.txt" << endl;
+        } else {
+            cout << "Unable to open file for writing." << endl;
+        }
+        cout << "Do you want to enter another set of data? (y/n): ";
+        char userChoice;
+        cin >> userChoice;
+        clearCin();
+        if (userChoice == 'n' || userChoice == 'N') {
+            continueInput = false;
+        }
+    } while (continueInput);
+
 
     return 0;
 
 }
 
-void clearCin(double& value, double defaultFail) {
-    if (cin.fail()) value = defaultFail; // Reset the value to a default fail value
-    cin.clear(); // Clear any error flags
-    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear the input buffera
+void getUserInput(vector<FitnessResults>& results, int& choice) {
+    FitnessResults result;
+    result.setHeightInches(getUserHeight());
+    result.setWeightPounds(getUserWeight());
+    result.setTimestamp(time(nullptr));
+    choice = getChoice();
+
+    if (choice == 1) {
+        result.setDistanceMiles(getUserDistance());
+        result.calculateCaloriesBurned();
+    } else if (choice == 2) {
+        result.setCaloriesBurned(getUserCalories());
+        result.calculateDistanceForCalories();
+    }
+
+    result.calculateBMI();
+    results.push_back(result);
 }
 
-void clearCin(int& value, int defaultFail) {
-    if (cin.fail()) value = defaultFail; // Reset the value to a default fail value
-    cin.clear(); // Clear any error flags
-    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear the input buffer
-}
 
-void clearCin() {
-    cin.clear(); // Clear any error flags
-    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear the input buffer
-}
 
 double getUserHeight() {
     double heightInches;
@@ -188,18 +234,20 @@ void getUserInput(double& heightInches, double& weightPounds, int& choice, doubl
     
 }
 
-void calculateCalories(double weight, double distance) {
+double calculateCalories(double weight, double distance) {
     const double CalorieBurnRate = 0.76;
-    // Assuming distance is in kilometers and weight is in kilograms
+    // Assuming distance is in miles and weight is in pounds
     double caloriesBurned = CalorieBurnRate * weight * distance;
     std::cout << "Calories burned: " << caloriesBurned << endl;
+    return caloriesBurned;
 }
 
-void calculateDistance(double weight, double calories) {
+double calculateDistance(double weight, double calories) {
     const double CalorieBurnRate = 0.76;
-    // Assuming weight is in kilograms and calories is the total calories burned
+    // Assuming weight is in pounds and calories is the total calories burned
     double distance = calories / (CalorieBurnRate * weight);
     std::cout << "Distance needed: " << distance << " miles" << endl;
+    return distance;
 }
 
 void showBMI(double heightInches, double weightPounds) {
