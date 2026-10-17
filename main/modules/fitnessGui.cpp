@@ -3,7 +3,6 @@
 #include "fitnessGuiConfig.h"
 
 #include <windows.h>
-#include <commctrl.h>
 
 #include <cmath>
 #include <ctime>
@@ -11,10 +10,8 @@
 #include <iomanip>
 #include <sstream>
 #include <string>
-#include <vector>
 
 #pragma comment(lib, "user32.lib")
-#pragma comment(lib, "comctl32.lib")
 
 HWND g_heightEdit = nullptr;
 HWND g_weightEdit = nullptr;
@@ -24,17 +21,7 @@ HWND g_bmiResult = nullptr;
 HWND g_caloriesResult = nullptr;
 HWND g_distanceResult = nullptr;
 HWND g_status = nullptr;
-HWND g_resultsTable = nullptr;
 std::vector<FitnessResults>* g_results = nullptr;
-
-struct FileResult {
-    std::string height;
-    std::string weight;
-    std::string bmi;
-    std::string distance;
-    std::string calories;
-    std::string timestamp;
-};
 
 HWND createControl(
     const wchar_t* className,
@@ -77,109 +64,6 @@ bool readDouble(HWND control, double& value) {
 
 void setText(HWND control, const std::wstring& text) {
     SetWindowTextW(control, text.c_str());
-}
-
-std::string fieldValue(const std::string& line, const char* label) {
-    const std::string prefix = std::string(label) + ": ";
-    if (line.compare(0, prefix.size(), prefix) != 0) {
-        return {};
-    }
-    return line.substr(prefix.size());
-}
-
-std::vector<FileResult> readResultsFile(bool& hadInvalidRecord) {
-    hadInvalidRecord = false;
-    std::ifstream input("fitness_results.txt");
-    std::vector<FileResult> fileResults;
-    if (!input) {
-        return fileResults;
-    }
-
-    std::vector<std::string> lines;
-    std::string line;
-    while (std::getline(input, line)) {
-        if (!line.empty()) {
-            lines.push_back(line);
-        }
-    }
-
-    constexpr size_t fieldsPerResult = 6;
-    for (size_t index = 0; index + fieldsPerResult <= lines.size();
-         index += fieldsPerResult) {
-        FileResult result{
-            fieldValue(lines[index], "Height"),
-            fieldValue(lines[index + 1], "Weight"),
-            fieldValue(lines[index + 2], "BMI"),
-            fieldValue(lines[index + 3], "Distance"),
-            fieldValue(lines[index + 4], "Calories Burned"),
-            fieldValue(lines[index + 5], "Timestamp")
-        };
-
-        if (result.height.empty() || result.weight.empty() ||
-            result.bmi.empty() || result.distance.empty() ||
-            result.calories.empty() || result.timestamp.empty()) {
-            hadInvalidRecord = true;
-            continue;
-        }
-        fileResults.push_back(result);
-    }
-
-    if (lines.size() % fieldsPerResult != 0) {
-        hadInvalidRecord = true;
-    }
-    return fileResults;
-}
-
-std::wstring toWide(const std::string& value) {
-    return std::wstring(value.begin(), value.end());
-}
-
-void addTableColumn(int index, const fitnessGuiConfig::TableColumn& columnInfo) {
-    LVCOLUMNW column = {};
-    column.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
-    column.pszText = const_cast<wchar_t*>(columnInfo.title);
-    column.cx = columnInfo.width;
-    column.iSubItem = index;
-    ListView_InsertColumn(g_resultsTable, index, &column);
-}
-
-void refreshResultsTable() {
-    ListView_DeleteAllItems(g_resultsTable);
-    bool hadInvalidRecord = false;
-    const std::vector<FileResult> fileResults =
-        readResultsFile(hadInvalidRecord);
-
-    for (size_t index = 0; index < fileResults.size(); ++index) {
-        const FileResult& result = fileResults[index];
-        const std::wstring height = toWide(result.height);
-        LVITEMW item = {};
-        item.mask = LVIF_TEXT;
-        item.iItem = static_cast<int>(index);
-        item.pszText = const_cast<wchar_t*>(height.c_str());
-        ListView_InsertItem(g_resultsTable, &item);
-
-        const std::wstring values[] = {
-            toWide(result.weight),
-            toWide(result.bmi),
-            toWide(result.distance),
-            toWide(result.calories),
-            toWide(result.timestamp)
-        };
-        for (int column = 1; column < 6; ++column) {
-            ListView_SetItemText(
-                g_resultsTable,
-                static_cast<int>(index),
-                column,
-                const_cast<wchar_t*>(values[column - 1].c_str())
-            );
-        }
-    }
-
-    if (hadInvalidRecord) {
-        setText(g_status, L"Some result records could not be displayed.");
-    } else if (fileResults.empty()) {
-        setText(g_status, L"No saved results found.");
-    }
 }
 
 void updateResults() {
@@ -307,12 +191,7 @@ void saveResults() {
             << "Timestamp: " << result.getTimestamp() << "\n\n";
     
 
-    if (output) {
-        refreshResultsTable();
-        setText(g_status, L"Results saved.");
-    } else {
-        setText(g_status, L"Unable to write results.");
-    }
+    setText(g_status, output ? L"Results saved." : L"Unable to write results.");
 }
 
 void createWindowControls(HWND window) {
@@ -380,37 +259,6 @@ void createWindowControls(HWND window) {
         L"STATIC", L"Results are not saved automatically.",
         0, 340, 330, 220, 30, window, fitnessGuiConfig::statusId
     );
-    g_resultsTable = CreateWindowExW(
-        WS_EX_CLIENTEDGE,
-        WC_LISTVIEWW,
-        L"",
-        WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SINGLESEL |
-            LVS_SHOWSELALWAYS | WS_VSCROLL | WS_HSCROLL,
-        fitnessGuiConfig::resultsTableX,
-        fitnessGuiConfig::resultsTableY,
-        fitnessGuiConfig::resultsTableWidth,
-        fitnessGuiConfig::resultsTableHeight,
-        window,
-        reinterpret_cast<HMENU>(
-            static_cast<INT_PTR>(fitnessGuiConfig::resultsTableId)
-        ),
-        GetModuleHandleW(nullptr),
-        nullptr
-    );
-    ListView_SetExtendedListViewStyle(
-        g_resultsTable,
-        LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_DOUBLEBUFFER
-    );
-    constexpr size_t columnCount =
-        sizeof(fitnessGuiConfig::tableColumns) /
-        sizeof(fitnessGuiConfig::tableColumns[0]);
-    for (size_t index = 0; index < columnCount; ++index) {
-        addTableColumn(
-            static_cast<int>(index),
-            fitnessGuiConfig::tableColumns[index]
-        );
-    }
-    refreshResultsTable();
 }
 
 LRESULT CALLBACK windowProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -453,10 +301,6 @@ LRESULT CALLBACK windowProc(HWND window, UINT message, WPARAM wParam, LPARAM lPa
 
 int runFitnessGui(std::vector<FitnessResults>& results) {
     g_results = &results;
-    INITCOMMONCONTROLSEX commonControls = {};
-    commonControls.dwSize = sizeof(commonControls);
-    commonControls.dwICC = ICC_LISTVIEW_CLASSES;
-    InitCommonControlsEx(&commonControls);
     HINSTANCE instance = GetModuleHandleW(nullptr);
     constexpr wchar_t windowClassName[] = L"FitnessCalculatorWindow";
     WNDCLASSW windowClass = {};

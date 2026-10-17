@@ -4,7 +4,7 @@ project(dahacks5 LANGUAGES CXX)
 add_library(fitness_gui_module STATIC
     main/modules/fitnessGui.cpp
 )
-target_link_libraries(fitness_gui_module PUBLIC user32 comctl32)
+target_link_libraries(fitness_gui_module PUBLIC user32)
 
 add_executable(main
     main/main.cpp
