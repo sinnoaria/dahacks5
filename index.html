@@ -1,0 +1,740 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Run, Jog, Walk Calories</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+  /* Layout: your answers on the left; main.cpp's menu as track lanes and its printout on the right */
+  :root {
+    --bg: #F1F3F5;
+    --surface: #FFFFFF;
+    --field: #F6F7F9;
+    --ink: #14202B;
+    --muted: #5A6774;
+    --line: #DCE1E6;
+    --accent: #C4412B;        /* track red */
+    --accent-ink: #FFFFFF;
+    --accent-text: #B03A26;
+    --ring: rgba(196, 65, 43, 0.22);
+    --good: #1E7A4C;
+    --warn: #B76E00;
+    --warn-bg: #FFF3D6;
+    --warn-ink: #6E4B00;
+    --bad: #B42318;
+    --bad-bg: #FDECEA;
+    --term-bg: #14202B;
+    --term-ink: #DDE5EC;
+    --font-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+    --font-body: "Barlow", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0D1318;
+      --surface: #151D25;
+      --field: #1B252E;
+      --ink: #E6EBF0;
+      --muted: #95A3B0;
+      --line: #27323C;
+      --accent: #C84A33;
+      --accent-ink: #FFFFFF;
+      --accent-text: #F08A70;
+      --ring: rgba(240, 138, 112, 0.28);
+      --good: #5CC28C;
+      --warn: #F0B54A;
+      --warn-bg: #3A2F14;
+      --warn-ink: #F1D08A;
+      --bad: #F97066;
+      --bad-bg: #3B1A18;
+      --term-bg: #0A0F13;
+      --term-ink: #DDE5EC;
+      color-scheme: dark;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding-block: 40px 64px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    display: grid;
+    gap: 28px;
+  }
+
+  header { display: grid; gap: 10px; }
+  .topline { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+  .eyebrow {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+  }
+  .status { margin: 0; display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 14px; color: var(--muted); }
+  .status-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+  .status[data-state="ok"] .status-dot { background: var(--good); }
+  .status[data-state="warn"] .status-dot { background: var(--warn); }
+  .status[data-state="bad"] .status-dot { background: var(--bad); }
+  #status-text { color: var(--ink); font-weight: 500; }
+  h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(38px, 6.4vw, 56px);
+    line-height: 0.95;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+  .lede { margin: 0; max-width: 60ch; color: var(--muted); font-size: 17px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 780px) {
+    .grid { grid-template-columns: minmax(0, 1fr); }
+  }
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 24px;
+    min-width: 0;
+    display: grid;
+    gap: 22px;
+  }
+  @media (max-width: 520px) {
+    .panel { padding: 18px; }
+  }
+  .panel-head { display: grid; gap: 2px; }
+  .panel-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 22px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  .panel-sub { margin: 0; color: var(--muted); font-size: 14px; }
+
+  form { display: grid; gap: 22px; }
+  .field { display: grid; gap: 8px; min-width: 0; }
+  .field-label, .section-label {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+  /* Let every column shrink below an input's default width so phones don't scroll sideways */
+  .wrap, .panel, form, .field, .result, .method-body { grid-template-columns: minmax(0, 1fr); }
+  .control {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    background: var(--field);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .control:focus-within { border-color: var(--accent-text); box-shadow: 0 0 0 3px var(--ring); }
+  .control:has(input[aria-invalid="true"]) { border-color: var(--warn); }
+  .control input {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    font: 600 22px/1.2 var(--font-body);
+    font-variant-numeric: tabular-nums;
+    padding: 11px 0 11px 14px;
+    outline: none;
+  }
+  .unit { padding: 0 14px 0 8px; color: var(--muted); font-size: 15px; font-weight: 500; }
+  .hint { margin: 0; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    font: 500 14px/1 var(--font-body);
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .chip:hover { border-color: var(--muted); }
+  .chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+  .chip:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+
+  .lanes {
+    display: grid;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .lanes-empty { margin: 0; padding: 16px; color: var(--muted); font-size: 15px; }
+  .lane {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border-top: 1px solid var(--line);
+    background: var(--surface);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .lane:first-child { border-top: 0; }
+  .lane input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .lane:hover { background: var(--field); }
+  .lane:has(input:focus-visible) { outline: 2px solid var(--ink); outline-offset: -4px; }
+  .lane-no {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border: 2px solid var(--line);
+    border-radius: 8px;
+    font: 700 24px/1 var(--font-display);
+  }
+  .lane-name { display: grid; gap: 2px; min-width: 0; }
+  .lane-name strong {
+    font: 600 22px/1.1 var(--font-display);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  .lane-name small { font-size: 14px; color: var(--muted); }
+  .lane-kcal {
+    text-align: right;
+    font-size: 13px;
+    color: var(--muted);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .lane-kcal b { display: block; font: 700 26px/1 var(--font-display); color: var(--ink); }
+  .lane.is-selected { background: var(--accent); color: var(--accent-ink); }
+  .lane.is-selected .lane-no { border-color: var(--accent-ink); }
+  .lane.is-selected .lane-name small,
+  .lane.is-selected .lane-kcal,
+  .lane.is-selected .lane-kcal b { color: var(--accent-ink); }
+
+  .result { display: grid; gap: 14px; padding-top: 22px; border-top: 1px solid var(--line); transition: opacity 0.2s; }
+  .busy .result { opacity: 0.55; }
+  .total { margin: 0; display: flex; align-items: baseline; gap: 10px; font-variant-numeric: tabular-nums; }
+  .total-num { font: 700 clamp(64px, 13vw, 96px)/0.9 var(--font-display); letter-spacing: -0.01em; }
+  .total-unit {
+    font: 600 24px/1 var(--font-display);
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .stats { margin: 0; display: grid; }
+  .stats div {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding: 9px 0;
+    border-top: 1px solid var(--line);
+    min-width: 0;
+  }
+  .stats dt { color: var(--muted); font-size: 15px; }
+  .stats dd { margin: 0; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .alerts { display: grid; gap: 10px; }
+  .alerts:empty { display: none; }
+  .alert { margin: 0; padding: 11px 14px; border-radius: 10px; font-size: 15px; }
+  .alert-warn { background: var(--warn-bg); color: var(--warn-ink); }
+  .alert-bad { background: var(--bad-bg); color: var(--bad); }
+  .terminal {
+    margin: 0;
+    overflow-x: auto;
+    background: var(--term-bg);
+    color: var(--term-ink);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font: 13.5px/1.6 var(--font-mono);
+    white-space: pre;
+  }
+
+  .method { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 0 24px; }
+  @media (max-width: 520px) {
+    .method { padding: 0 18px; }
+  }
+  .method summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 0;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+  }
+  .method summary::-webkit-details-marker { display: none; }
+  .method summary::after { content: "+"; font: 600 24px/1 var(--font-display); color: var(--muted); }
+  .method[open] summary::after { content: "\2013"; }
+  .method summary:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 4px; border-radius: 4px; }
+  .method-body { display: grid; gap: 12px; padding-bottom: 24px; min-width: 0; }
+  .method-body p { margin: 0; max-width: 70ch; color: var(--muted); }
+  .method-body pre:not(.terminal) {
+    margin: 0;
+    overflow-x: auto;
+    background: var(--field);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font: 14px/1.7 var(--font-mono);
+    color: var(--ink);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <div class="topline">
+      <p class="eyebrow">Live from main.cpp</p>
+      <p class="status" id="status" data-state="idle">
+        <span class="status-dot"></span>
+        <span id="status-text">Connecting to the server…</span>
+        <span id="saved"></span>
+      </p>
+    </div>
+    <h1>Run, Jog, Walk Calories</h1>
+    <p class="lede" id="program-title">Every number on this page is printed by main.cpp.</p>
+  </header>
+
+  <div class="grid">
+    <section class="panel" aria-labelledby="you-title">
+      <div class="panel-head">
+        <h2 class="panel-title" id="you-title">Your answers</h2>
+        <p class="panel-sub">Each box is one line typed into main.cpp.</p>
+      </div>
+      <form id="calc" novalidate>
+        <div class="field">
+          <label class="field-label" for="weight">Weight</label>
+          <div class="control">
+            <input id="weight" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="150">
+            <span class="unit">lb</span>
+          </div>
+        </div>
+
+        <div class="field" role="group" aria-labelledby="height-label">
+          <span class="field-label" id="height-label">Height</span>
+          <div class="pair">
+            <div class="control">
+              <input id="feet" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" value="5" aria-label="Feet">
+              <span class="unit">ft</span>
+            </div>
+            <div class="control">
+              <input id="inches" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="8" aria-label="Inches">
+              <span class="unit">in</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="distance">Distance</label>
+          <div class="control">
+            <input id="distance" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="3.1">
+            <span class="unit">miles</span>
+          </div>
+          <div class="chips" role="group" aria-label="Common distances">
+            <button type="button" class="chip" data-mi="1" aria-pressed="false">1 mi</button>
+            <button type="button" class="chip" data-mi="3.1" aria-pressed="true">5K</button>
+            <button type="button" class="chip" data-mi="6.2" aria-pressed="false">10K</button>
+            <button type="button" class="chip" data-mi="13.1" aria-pressed="false">Half marathon</button>
+          </div>
+        </div>
+      </form>
+      <p class="hint" id="sent"></p>
+    </section>
+
+    <section class="panel" aria-labelledby="activity-label">
+      <div class="field">
+        <p class="section-label" id="activity-label">Activity · total from main.cpp</p>
+        <div class="lanes" id="lanes" role="radiogroup" aria-labelledby="activity-label">
+          <p class="lanes-empty">Waiting for main.cpp's menu…</p>
+        </div>
+      </div>
+
+      <div class="result" id="result">
+        <p class="section-label" id="total-label">Total</p>
+        <p class="total"><span class="total-num" id="total-num">–</span><span class="total-unit" id="total-unit"></span></p>
+        <dl class="stats" id="stats"></dl>
+        <div class="alerts" id="alerts"></div>
+      </div>
+    </section>
+  </div>
+
+  <details class="method" id="output-details">
+    <summary>Program output</summary>
+    <div class="method-body">
+      <p>Exactly what main.cpp printed for the selected activity, prompts included.</p>
+      <pre class="terminal" id="raw-output"></pre>
+    </div>
+  </details>
+
+  <details class="method">
+    <summary>How it's calculated</summary>
+    <div class="method-body">
+      <p>This is the comment block at the top of main.cpp, so it changes when the file does.</p>
+      <pre id="method-text"></pre>
+    </div>
+  </details>
+</main>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const fields = { weight: $('weight'), feet: $('feet'), inches: $('inches'), distance: $('distance') };
+  // Which box a main.cpp prompt belongs to, so a rejected answer can be marked
+  const PROMPT_WORDS = { weight: /weight/i, feet: /feet/i, inches: /inch/i, distance: /distance|mile/i };
+  const STORE_KEY = 'run-jog-walk-calories-live';
+
+  let menu = [];          // main.cpp's activity menu: [{ key: '1', label: 'Running (7 mph)' }, ...]
+  let selected = '3';
+  let seq = 0;
+  let lastVersion = null;
+  let offline = false;
+  let debounce = null;
+
+  // Split main.cpp's printout into its title, menu, result lines and any rejected answer.
+  // Prompts end with ":" and are printed without a line break, so result lines are the
+  // "Label: value" lines after the last prompt, and a rejection is a prompt followed by
+  // main.cpp's reply on the same line.
+  function parseOutput(text) {
+    const lines = text.replace(/\r/g, '').split('\n').map((line) => line.trim());
+    let lastPrompt = -1;
+    lines.forEach((line, i) => { if (line.endsWith(':')) lastPrompt = i; });
+
+    const parsed = { title: '', menu: [], results: [], complaint: null };
+    lines.forEach((line, i) => {
+      if (!line) return;
+      const item = line.match(/^(\d+)\.\s+(.+)$/);
+      if (item) {
+        parsed.menu.push({ key: item[1], label: item[2] });
+      } else if (line.endsWith(':')) {
+        // a prompt waiting for an answer
+      } else if (!line.includes(':')) {
+        if (!parsed.title && i < lastPrompt) parsed.title = line;
+      } else if (i > lastPrompt) {
+        const pair = line.match(/^([^:]+):\s*(.*)$/);
+        parsed.results.push({ label: pair[1].trim(), value: pair[2].trim() });
+      } else if (!parsed.complaint && line.includes(': ')) {
+        const cut = line.lastIndexOf(': ');
+        const prompts = line.slice(0, cut).split(': ');
+        parsed.complaint = { prompt: prompts[prompts.length - 1].trim(), message: line.slice(cut + 2).trim() };
+      }
+    });
+    return parsed;
+  }
+
+  const findTotal = (results) => results.find((r) => /total/i.test(r.label));
+  function splitNumber(value) {
+    const m = value.match(/^(-?[\d,]*\.?\d+)\s*(.*)$/);
+    return m ? { number: m[1], unit: m[2] } : { number: value, unit: '' };
+  }
+  function laneTotal(run) {
+    if (!run || 'buildError' in run || run.exitCode !== 0) return null;
+    const total = findTotal(parseOutput(run.output).results);
+    return total ? total.value : null;
+  }
+
+  async function runProgram(answers, choice) {
+    const query = new URLSearchParams({ ...answers, choice });
+    const response = await fetch('/api/run?' + query, { cache: 'no-store' });
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    return response.json();
+  }
+
+  function setStatus(state, text) {
+    $('status').dataset.state = state;
+    $('status-text').textContent = text;
+  }
+
+  function addAlert(kind, text) {
+    const p = document.createElement('p');
+    p.className = 'alert alert-' + kind;
+    p.textContent = text;
+    $('alerts').appendChild(p);
+  }
+
+  function clearResult() {
+    $('total-label').textContent = 'Total';
+    $('total-num').textContent = '–';
+    $('total-unit').textContent = '';
+    $('stats').textContent = '';
+    $('alerts').textContent = '';
+    for (const el of Object.values(fields)) el.setAttribute('aria-invalid', 'false');
+  }
+
+  function renderLanes() {
+    const box = $('lanes');
+    const signature = JSON.stringify(menu);
+    if (box.dataset.signature === signature) return;
+    box.dataset.signature = signature;
+    box.textContent = '';
+    for (const item of menu) {
+      const parts = item.label.match(/^(.*?)\s*\((.*)\)\s*$/);
+      const lane = document.createElement('label');
+      lane.className = 'lane';
+      lane.dataset.key = item.key;
+      lane.innerHTML =
+        '<input type="radio" name="activity">' +
+        '<span class="lane-no" aria-hidden="true"></span>' +
+        '<span class="lane-name"><strong></strong><small></small></span>' +
+        '<span class="lane-kcal"><b>–</b><span></span></span>';
+      const input = lane.querySelector('input');
+      input.value = item.key;
+      input.addEventListener('change', () => {
+        selected = item.key;
+        markSelected();
+        refresh();
+      });
+      lane.querySelector('.lane-no').textContent = item.key;
+      lane.querySelector('strong').textContent = parts ? parts[1] : item.label;
+      lane.querySelector('small').textContent = parts ? parts[2] : '';
+      box.appendChild(lane);
+    }
+    markSelected();
+  }
+
+  function markSelected() {
+    document.querySelectorAll('.lane').forEach((lane) => {
+      const on = lane.dataset.key === selected;
+      lane.classList.toggle('is-selected', on);
+      lane.querySelector('input').checked = on;
+    });
+  }
+
+  function setLaneTotal(key, total) {
+    const lane = document.querySelector(`.lane[data-key="${key}"]`);
+    if (!lane) return;
+    const split = total ? splitNumber(total) : null;
+    lane.querySelector('.lane-kcal b').textContent = split ? split.number : '–';
+    lane.querySelector('.lane-kcal span').textContent = split ? split.unit : '';
+  }
+
+  function renderRun(run, parsed) {
+    clearResult();
+    $('raw-output').textContent = run.output;
+    if (parsed.title) $('program-title').textContent = parsed.title;
+
+    if (run.exitCode === 0 && parsed.results.length) {
+      const total = findTotal(parsed.results);
+      if (total) {
+        const split = splitNumber(total.value);
+        $('total-label').textContent = total.label;
+        $('total-num').textContent = split.number;
+        $('total-unit').textContent = split.unit;
+      }
+      for (const r of parsed.results) {
+        if (r === total) continue;
+        if (/^note$/i.test(r.label)) {
+          addAlert('warn', r.value);
+          continue;
+        }
+        const row = document.createElement('div');
+        const dt = document.createElement('dt');
+        const dd = document.createElement('dd');
+        dt.textContent = r.label;
+        dd.textContent = r.value;
+        row.append(dt, dd);
+        $('stats').appendChild(row);
+      }
+      setStatus('ok', 'Live from main.cpp');
+      return;
+    }
+
+    if (parsed.complaint) {
+      addAlert('warn', `${parsed.complaint.prompt}: ${parsed.complaint.message}`);
+      for (const [key, words] of Object.entries(PROMPT_WORDS)) {
+        if (words.test(parsed.complaint.prompt)) fields[key].setAttribute('aria-invalid', 'true');
+      }
+      setStatus('warn', 'main.cpp rejected an answer');
+    } else {
+      addAlert('warn', `main.cpp stopped without printing results (exit code ${run.exitCode}). Its output is under Program output.`);
+      $('output-details').open = true;
+      setStatus('warn', 'main.cpp printed no results');
+    }
+  }
+
+  function renderBuildError(message) {
+    clearResult();
+    addAlert('bad', 'main.cpp doesn’t compile. Fix the error below and save the file; this page updates by itself.');
+    const pre = document.createElement('pre');
+    pre.className = 'terminal';
+    pre.textContent = message;
+    $('alerts').appendChild(pre);
+    $('raw-output').textContent = message;
+    menu.forEach((m) => setLaneTotal(m.key, null));
+    setStatus('bad', 'main.cpp doesn’t compile');
+  }
+
+  function renderOffline() {
+    offline = true;
+    clearResult();
+    addAlert('bad', 'Can’t reach the server. Start it with ./server inside the api folder, then reload this page.');
+    setStatus('bad', 'Can’t reach server.cpp');
+  }
+
+  function readAnswers() {
+    const answers = {};
+    for (const [key, el] of Object.entries(fields)) {
+      const value = el.value.trim();
+      if (!value) return null;
+      answers[key] = value;
+    }
+    return answers;
+  }
+
+  function updateChips() {
+    const typed = fields.distance.value.trim();
+    document.querySelectorAll('.chip').forEach((chip) => {
+      chip.setAttribute('aria-pressed', String(chip.dataset.mi === typed));
+    });
+  }
+
+  function save() {
+    try {
+      const saved = { selected };
+      for (const [key, el] of Object.entries(fields)) saved[key] = el.value;
+      localStorage.setItem(STORE_KEY, JSON.stringify(saved));
+    } catch (e) { /* storage unavailable */ }
+  }
+
+  function load() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+      if (!saved) return;
+      for (const [key, el] of Object.entries(fields)) {
+        if (typeof saved[key] === 'string') el.value = saved[key];
+      }
+      if (typeof saved.selected === 'string') selected = saved.selected;
+    } catch (e) { /* storage unavailable */ }
+  }
+
+  async function refresh() {
+    const mySeq = ++seq;
+    updateChips();
+    save();
+    const answers = readAnswers();
+    if (!answers) {
+      clearResult();
+      addAlert('warn', 'Fill in every box to run main.cpp.');
+      menu.forEach((m) => setLaneTotal(m.key, null));
+      $('sent').textContent = '';
+      setStatus('warn', 'Waiting for your answers');
+      return;
+    }
+    $('sent').textContent = 'Lines sent to main.cpp: ' +
+      [answers.weight, answers.feet, answers.inches, answers.distance, selected].join(' ⏎ ') + ' ⏎';
+    document.body.classList.add('busy');
+    try {
+      const first = await runProgram(answers, selected);
+      if (mySeq !== seq) return;
+      offline = false;
+      if ('buildError' in first) {
+        renderBuildError(first.buildError);
+        return;
+      }
+      const parsed = parseOutput(first.output);
+      if (parsed.menu.length) menu = parsed.menu;
+      if (menu.length && !menu.some((m) => m.key === selected)) {
+        selected = menu[0].key;    // main.cpp's menu changed; start from its first option
+        renderLanes();
+        refresh();
+        return;
+      }
+      renderLanes();
+      renderRun(first, parsed);
+      setLaneTotal(selected, laneTotal(first));
+
+      const others = menu.filter((m) => m.key !== selected);
+      const runs = await Promise.all(others.map((m) =>
+        runProgram(answers, m.key).then((run) => [m.key, run], () => [m.key, null])));
+      if (mySeq !== seq) return;
+      for (const [key, run] of runs) setLaneTotal(key, laneTotal(run));
+    } catch (error) {
+      if (mySeq === seq) renderOffline();
+    } finally {
+      if (mySeq === seq) document.body.classList.remove('busy');
+    }
+  }
+
+  // Ask the server when main.cpp was last saved; run it again when that changes
+  async function checkVersion() {
+    try {
+      const response = await fetch('/api/version', { cache: 'no-store' });
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const info = await response.json();
+      const reconnected = offline;
+      if (info.version !== lastVersion) {
+        const changed = lastVersion !== null;
+        lastVersion = info.version;
+        $('method-text').textContent = info.comment || 'main.cpp has no comment block at the top.';
+        $('saved').textContent = info.version
+          ? '· main.cpp saved ' + new Date(info.version * 1000).toLocaleTimeString()
+          : '';
+        if (changed) refresh();
+      }
+      if (reconnected) refresh();
+    } catch (error) {
+      offline = true;
+      setStatus('bad', 'Can’t reach server.cpp');
+    }
+  }
+
+  load();
+  Object.values(fields).forEach((el) => el.addEventListener('input', () => {
+    updateChips();
+    clearTimeout(debounce);
+    debounce = setTimeout(refresh, 300);
+  }));
+  document.querySelectorAll('.chip').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      fields.distance.value = chip.dataset.mi;
+      refresh();
+    });
+  });
+  $('calc').addEventListener('submit', (e) => {
+    e.preventDefault();
+    refresh();
+  });
+
+  checkVersion();
+  refresh();
+  setInterval(checkVersion, 2000);
+})();
+</script>
+</body>
+</html>
