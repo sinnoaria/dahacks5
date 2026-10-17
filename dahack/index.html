@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calories and BMI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+  /* Layout: your answers on the left; what main.cpp printed on the right */
+  :root {
+    --bg: #F1F3F5;
+    --surface: #FFFFFF;
+    --field: #F6F7F9;
+    --ink: #14202B;
+    --muted: #5A6774;
+    --line: #DCE1E6;
+    --accent: #C4412B;        /* track red */
+    --accent-ink: #FFFFFF;
+    --accent-text: #B03A26;
+    --ring: rgba(196, 65, 43, 0.22);
+    --good: #1E7A4C;
+    --warn: #B76E00;
+    --warn-bg: #FFF3D6;
+    --warn-ink: #6E4B00;
+    --bad: #B42318;
+    --bad-bg: #FDECEA;
+    --term-bg: #14202B;
+    --term-ink: #DDE5EC;
+    --term-answer: #F5B38F;
+    --font-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+    --font-body: "Barlow", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0D1318;
+      --surface: #151D25;
+      --field: #1B252E;
+      --ink: #E6EBF0;
+      --muted: #95A3B0;
+      --line: #27323C;
+      --accent: #C84A33;
+      --accent-ink: #FFFFFF;
+      --accent-text: #F08A70;
+      --ring: rgba(240, 138, 112, 0.28);
+      --good: #5CC28C;
+      --warn: #F0B54A;
+      --warn-bg: #3A2F14;
+      --warn-ink: #F1D08A;
+      --bad: #F97066;
+      --bad-bg: #3B1A18;
+      --term-bg: #0A0F13;
+      --term-ink: #DDE5EC;
+      color-scheme: dark;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding-block: 40px 64px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    display: grid;
+    gap: 28px;
+  }
+
+  header { display: grid; gap: 10px; }
+  .topline { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+  .eyebrow {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+  }
+  .status { margin: 0; display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 14px; color: var(--muted); }
+  .status-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+  .status[data-state="ok"] .status-dot { background: var(--good); }
+  .status[data-state="warn"] .status-dot { background: var(--warn); }
+  .status[data-state="bad"] .status-dot { background: var(--bad); }
+  #status-text { color: var(--ink); font-weight: 500; }
+  h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(38px, 6.4vw, 56px);
+    line-height: 0.95;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+  .lede { margin: 0; max-width: 60ch; color: var(--muted); font-size: 17px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 780px) {
+    .grid { grid-template-columns: minmax(0, 1fr); }
+  }
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 24px;
+    min-width: 0;
+    display: grid;
+    gap: 22px;
+  }
+  @media (max-width: 520px) {
+    .panel { padding: 18px; }
+  }
+  .panel-head { display: grid; gap: 2px; }
+  .panel-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 22px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  .panel-sub { margin: 0; color: var(--muted); font-size: 14px; }
+
+  form { display: grid; gap: 22px; }
+  .field { display: grid; gap: 8px; min-width: 0; }
+  .field[hidden] { display: none; }
+  .field-label, .section-label {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .prompt { margin: 0; font: 13px/1.4 var(--font-mono); color: var(--muted); overflow-wrap: anywhere; }
+  /* Let every column shrink below an input's default width so phones don't scroll sideways */
+  .wrap, .panel, form, .field, .result { grid-template-columns: minmax(0, 1fr); }
+  .control {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    background: var(--field);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .control:focus-within { border-color: var(--accent-text); box-shadow: 0 0 0 3px var(--ring); }
+  .control:has(input[aria-invalid="true"]) { border-color: var(--warn); }
+  .control input {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    font: 600 22px/1.2 var(--font-body);
+    font-variant-numeric: tabular-nums;
+    padding: 11px 0 11px 14px;
+    outline: none;
+  }
+  .unit { padding: 0 14px 0 8px; color: var(--muted); font-size: 15px; font-weight: 500; }
+  .hint { margin: 0; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+
+  .modes {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .mode {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--surface);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .mode + .mode { border-left: 1px solid var(--line); }
+  .mode input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .mode:hover { background: var(--field); }
+  .mode:has(input:focus-visible) { outline: 2px solid var(--ink); outline-offset: -4px; }
+  .mode-no {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border: 2px solid var(--line);
+    border-radius: 8px;
+    font: 700 20px/1 var(--font-display);
+  }
+  .mode strong {
+    font: 600 19px/1.1 var(--font-display);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    min-width: 0;
+  }
+  .mode:has(input:checked) { background: var(--accent); color: var(--accent-ink); }
+  .mode:has(input:checked) .mode-no { border-color: var(--accent-ink); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    font: 500 14px/1 var(--font-body);
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .chip:hover { border-color: var(--muted); }
+  .chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+  .chip:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+
+  .result { display: grid; gap: 14px; transition: opacity 0.2s; }
+  .busy .result { opacity: 0.55; }
+  .total { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; font-variant-numeric: tabular-nums; }
+  .total-num { font: 700 clamp(56px, 12vw, 88px)/0.9 var(--font-display); letter-spacing: -0.01em; overflow-wrap: anywhere; }
+  .total-unit {
+    font: 600 24px/1 var(--font-display);
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .stats { margin: 0; display: grid; }
+  .stats div {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding: 9px 0;
+    border-top: 1px solid var(--line);
+    min-width: 0;
+  }
+  .stats dt { color: var(--muted); font-size: 15px; }
+  .stats dd { margin: 0; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .alerts { display: grid; gap: 10px; }
+  .alerts:empty { display: none; }
+  .alert { margin: 0; padding: 11px 14px; border-radius: 10px; font-size: 15px; }
+  .alert-warn { background: var(--warn-bg); color: var(--warn-ink); }
+  .alert-bad { background: var(--bad-bg); color: var(--bad); }
+  .output { display: grid; gap: 8px; padding-top: 22px; border-top: 1px solid var(--line); min-width: 0; }
+  .output-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 12px; }
+  .toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--muted); cursor: pointer; }
+  .terminal {
+    margin: 0;
+    max-height: 420px;
+    overflow: auto;
+    background: var(--term-bg);
+    color: var(--term-ink);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font: 13.5px/1.6 var(--font-mono);
+    white-space: pre;
+  }
+  .terminal .answer { color: var(--term-answer); font-weight: 600; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <div class="topline">
+      <p class="eyebrow">Live from main.cpp</p>
+      <p class="status" id="status" data-state="idle">
+        <span class="status-dot"></span>
+        <span id="status-text">Connecting to the server…</span>
+        <span id="saved"></span>
+      </p>
+    </div>
+    <h1>Calories and BMI</h1>
+    <p class="lede">Your answers are typed into main.cpp line by line, and every number here is what it printed.</p>
+  </header>
+
+  <div class="grid">
+    <section class="panel" aria-labelledby="you-title">
+      <div class="panel-head">
+        <h2 class="panel-title" id="you-title">Your answers</h2>
+        <p class="panel-sub">Each box answers one of main.cpp's questions, in the order it asks them.</p>
+      </div>
+      <form id="calc" novalidate>
+        <div class="field">
+          <label class="field-label" for="height">Height</label>
+          <p class="prompt">Enter your height in inches:</p>
+          <div class="control">
+            <input id="height" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="68">
+            <span class="unit">in</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="weight">Weight</label>
+          <p class="prompt">Enter your weight in pounds:</p>
+          <div class="control">
+            <input id="weight" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="150">
+            <span class="unit">lb</span>
+          </div>
+        </div>
+
+        <div class="field" role="radiogroup" aria-labelledby="mode-label">
+          <span class="field-label" id="mode-label">Calculate</span>
+          <p class="prompt">Do you want to calculate … (Enter '1' or 'calories' or '2' or 'distance'):</p>
+          <div class="modes">
+            <label class="mode">
+              <input type="radio" name="choice" value="1" checked>
+              <span class="mode-no" aria-hidden="true">1</span>
+              <strong>Calories burned</strong>
+            </label>
+            <label class="mode">
+              <input type="radio" name="choice" value="2">
+              <span class="mode-no" aria-hidden="true">2</span>
+              <strong>Distance needed</strong>
+            </label>
+          </div>
+        </div>
+
+        <div class="field" id="distance-field">
+          <label class="field-label" for="distance">Distance</label>
+          <p class="prompt">Enter the distance in miles:</p>
+          <div class="control">
+            <input id="distance" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="3.1">
+            <span class="unit">miles</span>
+          </div>
+          <div class="chips" role="group" aria-label="Common distances">
+            <button type="button" class="chip" data-mi="1" aria-pressed="false">1 mi</button>
+            <button type="button" class="chip" data-mi="3.1" aria-pressed="true">5K</button>
+            <button type="button" class="chip" data-mi="6.2" aria-pressed="false">10K</button>
+            <button type="button" class="chip" data-mi="13.1" aria-pressed="false">Half marathon</button>
+          </div>
+        </div>
+
+        <div class="field" id="calories-field" hidden>
+          <label class="field-label" for="calories">Calories</label>
+          <p class="prompt">Enter the calories burned:</p>
+          <div class="control">
+            <input id="calories" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="300">
+            <span class="unit">kcal</span>
+          </div>
+        </div>
+      </form>
+      <p class="hint" id="sent"></p>
+    </section>
+
+    <section class="panel" aria-labelledby="result-title">
+      <div class="result" id="result">
+        <p class="section-label" id="result-title">Result</p>
+        <p class="total"><span class="total-num" id="total-num">–</span><span class="total-unit" id="total-unit"></span></p>
+        <dl class="stats" id="stats"></dl>
+        <div class="alerts" id="alerts"></div>
+      </div>
+
+      <div class="output">
+        <div class="output-head">
+          <p class="section-label">What main.cpp printed</p>
+          <label class="toggle"><input type="checkbox" id="show-answers" checked> Show typed answers</label>
+        </div>
+        <pre class="terminal" id="raw-output" aria-live="polite"></pre>
+        <p class="hint">Character for character what main.cpp printed. With “Show typed answers” on, the lines sent to it are shown in color after each prompt, the way a terminal would echo them.</p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  // Opened straight from disk: talk to the server on its default port
+  const API = location.protocol === 'file:' ? 'http://localhost:8080' : '';
+  const fields = { height: $('height'), weight: $('weight'), distance: $('distance'), calories: $('calories') };
+  // Which box a main.cpp prompt belongs to, so the one it rejected can be marked
+  const PROMPT_FIELDS = [
+    [/height/i, 'height'], [/weight/i, 'weight'], [/distance in miles/i, 'distance'],
+    [/calories burned:$/i, 'calories'], [/do you want|enter '1'/i, 'choice'],
+  ];
+  const STORE_KEY = 'dahacks5-calories-bmi';
+
+  let seq = 0;
+  let lastVersion = null;
+  let offline = false;
+  let debounce = null;
+  let lastRun = null;
+
+  const choice = () => document.querySelector('input[name="choice"]:checked').value;
+
+  // The lines main.cpp reads, in the order it asks for them
+  function answerLines() {
+    const lines = [fields.height.value.trim(), fields.weight.value.trim(), choice()];
+    lines.push(choice() === '1' ? fields.distance.value.trim() : fields.calories.value.trim());
+    return lines;
+  }
+
+  // main.cpp prints its prompts without a line break, so a line like
+  // "Enter the distance in miles: Calories burned: 354.35" holds prompts followed by
+  // one result. A result is the last "Label: value" on a line whose value is a
+  // number; anything else after a prompt is more text from main.cpp (the menu).
+  function parseResults(text) {
+    const results = [];
+    for (const raw of text.replace(/\r/g, '').split('\n')) {
+      const line = raw.trimEnd();
+      const cut = line.lastIndexOf(': ');
+      if (cut === -1 || line.endsWith(':')) continue;
+      const before = line.slice(0, cut);
+      const prev = Math.max(before.lastIndexOf(': '), before.lastIndexOf('): '));
+      const label = (prev === -1 ? before : before.slice(prev + 2)).trim();
+      const value = line.slice(cut + 2).trim();
+      if (label && /^[-+]?(\d|\.\d|inf|nan)/i.test(value)) results.push({ label, value });
+    }
+    return results;
+  }
+
+  // The prompt main.cpp asked again (an answer it didn't accept), if any
+  function rejectedPrompt(text) {
+    const prompts = text.match(/[A-Z(][^:\n]*?:(?= |$)/gm) || [];
+    for (let i = 1; i < prompts.length; i++) {
+      if (prompts[i] === prompts[i - 1]) return prompts[i];
+    }
+    return prompts.length ? prompts[prompts.length - 1] : null;
+  }
+
+  function splitNumber(value) {
+    const m = value.match(/^(-?[\d,]*\.?\d+(?:e[+-]?\d+)?)\s*(.*)$/i);
+    return m ? { number: m[1], unit: m[2] } : { number: value, unit: '' };
+  }
+
+  async function runProgram(lines) {
+    const response = await fetch(API + '/api/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: lines.join('\n') + '\n',
+      cache: 'no-store',
+    });
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    return response.json();
+  }
+
+  function setStatus(state, text) {
+    $('status').dataset.state = state;
+    $('status-text').textContent = text;
+  }
+
+  function addAlert(kind, text) {
+    const p = document.createElement('p');
+    p.className = 'alert alert-' + kind;
+    p.textContent = text;
+    $('alerts').appendChild(p);
+  }
+
+  function clearResult() {
+    $('result-title').textContent = 'Result';
+    $('total-num').textContent = '–';
+    $('total-unit').textContent = '';
+    $('stats').textContent = '';
+    $('alerts').textContent = '';
+    for (const el of Object.values(fields)) el.setAttribute('aria-invalid', 'false');
+  }
+
+  // The printout as-is; optionally with each typed line shown after the prompt that read it
+  function renderOutput() {
+    const box = $('raw-output');
+    box.textContent = '';
+    if (!lastRun) return;
+    const { text, lines } = lastRun;
+    if (!$('show-answers').checked || !lines) {
+      box.textContent = text;
+      return;
+    }
+    // A prompt is text ending in ": " that main.cpp printed before reading a line
+    const prompt = /(height in inches|weight in pounds|'distance'\)|distance in miles|calories burned): /g;
+    let at = 0, next = 0, m;
+    while ((m = prompt.exec(text)) && next < lines.length) {
+      const end = m.index + m[0].length;
+      box.append(text.slice(at, end));
+      const span = document.createElement('span');
+      span.className = 'answer';
+      span.textContent = lines[next++] + '\n';
+      box.append(span);
+      at = end;
+    }
+    box.append(text.slice(at));
+  }
+
+  function renderRun(run, lines) {
+    clearResult();
+    lastRun = { text: run.output, lines };
+    renderOutput();
+    const results = parseResults(run.output);
+
+    if (run.exitCode === 0 && results.length) {
+      const [main, ...rest] = results;
+      const split = splitNumber(main.value);
+      $('result-title').textContent = main.label;
+      $('total-num').textContent = split.number;
+      $('total-unit').textContent = split.unit;
+      for (const r of rest) {
+        const row = document.createElement('div');
+        const dt = document.createElement('dt');
+        const dd = document.createElement('dd');
+        dt.textContent = r.label;
+        dd.textContent = r.value;
+        row.append(dt, dd);
+        $('stats').appendChild(row);
+      }
+      // Lines without a "Label: value" (like "Something went wrong") are main.cpp talking
+      for (const line of run.output.split('\n').map((l) => l.trim())) {
+        if (/^something went wrong/i.test(line)) addAlert('warn', 'main.cpp: ' + line);
+      }
+      setStatus('ok', 'Live from main.cpp');
+      return;
+    }
+
+    if (run.timedOut) {
+      const prompt = rejectedPrompt(run.output);
+      addAlert('warn', prompt
+        ? `main.cpp didn’t accept an answer and kept asking “${prompt}”. Check that box.`
+        : 'main.cpp kept waiting for more input and was stopped after 5 seconds.');
+      for (const [words, key] of PROMPT_FIELDS) {
+        if (prompt && words.test(prompt) && fields[key]) fields[key].setAttribute('aria-invalid', 'true');
+      }
+      setStatus('warn', 'main.cpp rejected an answer');
+    } else {
+      addAlert('warn', `main.cpp stopped without printing a result (exit code ${run.exitCode}).`);
+      setStatus('warn', 'main.cpp printed no result');
+    }
+  }
+
+  function renderBuildError(message) {
+    clearResult();
+    addAlert('bad', 'main.cpp doesn’t compile. The compiler’s messages are below; save the file again and this page updates by itself.');
+    lastRun = { text: message, lines: null };
+    renderOutput();
+    setStatus('bad', 'main.cpp doesn’t compile');
+  }
+
+  function renderOffline() {
+    offline = true;
+    clearResult();
+    lastRun = null;
+    renderOutput();
+    addAlert('bad', 'Can’t reach the server. Double-click start-server.bat in the dahack folder, then open http://localhost:8080.');
+    setStatus('bad', 'Can’t reach the server');
+  }
+
+  function updateMode() {
+    const one = choice() === '1';
+    $('distance-field').hidden = !one;
+    $('calories-field').hidden = one;
+  }
+
+  function updateChips() {
+    const typed = fields.distance.value.trim();
+    document.querySelectorAll('.chip').forEach((chip) => {
+      chip.setAttribute('aria-pressed', String(chip.dataset.mi === typed));
+    });
+  }
+
+  function save() {
+    try {
+      const saved = { choice: choice() };
+      for (const [key, el] of Object.entries(fields)) saved[key] = el.value;
+      localStorage.setItem(STORE_KEY, JSON.stringify(saved));
+    } catch (e) { /* storage unavailable */ }
+  }
+
+  function load() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+      if (!saved) return;
+      for (const [key, el] of Object.entries(fields)) {
+        if (typeof saved[key] === 'string') el.value = saved[key];
+      }
+      const radio = document.querySelector(`input[name="choice"][value="${saved.choice}"]`);
+      if (radio) radio.checked = true;
+    } catch (e) { /* storage unavailable */ }
+  }
+
+  async function refresh() {
+    const mySeq = ++seq;
+    updateMode();
+    updateChips();
+    save();
+    const lines = answerLines();
+    if (lines.some((line) => !line)) {
+      clearResult();
+      addAlert('warn', 'Fill in every box to run main.cpp.');
+      $('sent').textContent = '';
+      setStatus('warn', 'Waiting for your answers');
+      return;
+    }
+    $('sent').textContent = 'Lines sent to main.cpp: ' + lines.join(' ⏎ ') + ' ⏎';
+    document.body.classList.add('busy');
+    try {
+      const run = await runProgram(lines);
+      if (mySeq !== seq) return;
+      offline = false;
+      if ('buildError' in run) renderBuildError(run.buildError);
+      else renderRun(run, lines);
+    } catch (error) {
+      if (mySeq === seq) renderOffline();
+    } finally {
+      if (mySeq === seq) document.body.classList.remove('busy');
+    }
+  }
+
+  // Ask the server when main.cpp was last saved; run it again when that changes
+  async function checkVersion() {
+    try {
+      const response = await fetch(API + '/api/version', { cache: 'no-store' });
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const info = await response.json();
+      const reconnected = offline;
+      if (info.version !== lastVersion) {
+        const changed = lastVersion !== null;
+        lastVersion = info.version;
+        $('saved').textContent = info.version
+          ? '· main.cpp saved ' + new Date(info.version * 1000).toLocaleTimeString()
+          : '';
+        if (changed) refresh();
+      }
+      if (reconnected) refresh();
+    } catch (error) {
+      offline = true;
+      setStatus('bad', 'Can’t reach the server');
+    }
+  }
+
+  load();
+  Object.values(fields).forEach((el) => el.addEventListener('input', () => {
+    updateChips();
+    clearTimeout(debounce);
+    debounce = setTimeout(refresh, 300);
+  }));
+  document.querySelectorAll('input[name="choice"]').forEach((radio) => radio.addEventListener('change', refresh));
+  document.querySelectorAll('.chip').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      fields.distance.value = chip.dataset.mi;
+      refresh();
+    });
+  });
+  $('show-answers').addEventListener('change', renderOutput);
+  $('calc').addEventListener('submit', (e) => {
+    e.preventDefault();
+    refresh();
+  });
+
+  checkVersion();
+  refresh();
+  setInterval(checkVersion, 2000);
+})();
+</script>
+</body>
+</html>
